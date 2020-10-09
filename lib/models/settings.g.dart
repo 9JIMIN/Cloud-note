@@ -19,7 +19,7 @@ class SettingsAdapter extends TypeAdapter<Settings> {
     return Settings(
       isDarkMode: fields[0] as bool,
       rootPath: fields[1] as String,
-      lastOpenNotePath: fields[2] as String,
+      lastOpenNoteName: fields[2] as String,
     );
   }
 
@@ -32,7 +32,7 @@ class SettingsAdapter extends TypeAdapter<Settings> {
       ..writeByte(1)
       ..write(obj.rootPath)
       ..writeByte(2)
-      ..write(obj.lastOpenNotePath);
+      ..write(obj.lastOpenNoteName);
   }
 
   @override

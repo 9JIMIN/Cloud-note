@@ -9,11 +9,11 @@ class Settings extends HiveObject {
   @HiveField(1)
   String rootPath;
   @HiveField(2)
-  String lastOpenNotePath;
+  String lastOpenNoteName;
 
   Settings({
     this.isDarkMode,
     this.rootPath,
-    this.lastOpenNotePath,
+    this.lastOpenNoteName,
   });
 }

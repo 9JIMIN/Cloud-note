@@ -9,11 +9,11 @@ class Note extends HiveObject {
   @HiveField(1)
   DateTime lastModified;
   @HiveField(2)
-  String notePath;
+  String fileName;
 
   Note({
     this.title,
     this.lastModified,
-    this.notePath,
+    this.fileName,
   });
 }

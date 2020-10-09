@@ -19,7 +19,7 @@ class NoteAdapter extends TypeAdapter<Note> {
     return Note(
       title: fields[0] as String,
       lastModified: fields[1] as DateTime,
-      notePath: fields[2] as String,
+      fileName: fields[2] as String,
     );
   }
 
@@ -32,7 +32,7 @@ class NoteAdapter extends TypeAdapter<Note> {
       ..writeByte(1)
       ..write(obj.lastModified)
       ..writeByte(2)
-      ..write(obj.notePath);
+      ..write(obj.fileName);
   }
 
   @override
