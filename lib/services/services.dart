@@ -3,15 +3,15 @@ import 'dart:io';
 
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:writer/models/note.dart';
 import 'package:zefyr/zefyr.dart';
 
-import '../models/settings.dart';
+import '../models/note.dart';
 import 'notes_api.dart';
 import 'settings_api.dart';
 import 'zefyr_api.dart';
 
 class Services {
+  static String get rootPath => SettingsApi.settingsModel.rootPath;
   static String get lastOpenFileName =>
       SettingsApi.settingsModel.lastOpenNoteName;
 
@@ -19,6 +19,7 @@ class Services {
       SettingsApi.settingsModel.rootPath + '/json/$lastOpenFileName.json';
 
   // 1-1. 처음 열때
+  // ****************************************************
   static Future<void> initApp() async {
     // 박스 열기
     await Hive.initFlutter();
@@ -36,12 +37,13 @@ class Services {
   static Future<void> _whenNoSettings() async {
     // 세팅 추가
     await SettingsApi.initSettings();
-    // 노트 정보 추가
     final initTitle = 'welcome to my app';
     final initContent = 'welcome to my note app\n';
-    // 파일 추가
     final document = await ZefyrApi.stringToDocument(initContent);
-    await ZefyrApi.addDocument(document, lastOpenFilePath);
+    await ZefyrApi.addDocument(
+      document,
+      lastOpenFilePath,
+    );
     // 노트 추가
     await NotesApi.addNote(
       initTitle,
@@ -50,6 +52,7 @@ class Services {
   }
 
   // 2-1. 노트 읽기
+  // **************************************
   static Future<Note> getNote() async {
     final Note note = await NotesApi.getNoteByName(lastOpenFileName);
     return note;
@@ -57,16 +60,13 @@ class Services {
 
   // 2-2. 파일 읽기
   static Future<NotusDocument> getDocument() async {
-    print('getDocument: ' + lastOpenFilePath);
     final contents = await File(lastOpenFilePath).readAsString();
     return NotusDocument.fromJson(jsonDecode(contents));
   }
 
   // 3. 저장
-  static Future<void> saveNote(String title, NotusDocument document) async {
-    // 노트 업데이트
-    await NotesApi.updateNote(title, lastOpenFileName);
-    // 파일 업데이트
+  static Future<void> saveNote(Note note, NotusDocument document) async {
+    await NotesApi.updateNote(note.title, lastOpenFileName);
     await ZefyrApi.updateDocument(document, lastOpenFilePath);
   }
 
@@ -79,10 +79,12 @@ class Services {
   static Future<void> deleteNote(String fileName) async {
     if (SettingsApi.settingsModel.lastOpenNoteName == fileName) {
       // 현재 문서가 삭제되면, 텅비워줌.
-      await SettingsApi.updateLastOpenNoteName('');
+      await SettingsApi.updateLastOpenNoteName('empty');
     }
     final Note note = await NotesApi.getNoteByName(fileName);
     await NotesApi.deleteNote(note);
+    await ZefyrApi.deleteDocument(
+        SettingsApi.settingsModel.rootPath + '/json/$fileName.json');
   }
 
   // 6. 문서 생성

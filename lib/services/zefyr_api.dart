@@ -29,7 +29,7 @@ class ZefyrApi {
     final contents = await File(filePath).readAsString();
     return NotusDocument.fromJson(jsonDecode(contents));
   }
-
+  
   static Future<void> deleteDocument(String filePath) async {
     await File(filePath).delete(recursive: true);
   }

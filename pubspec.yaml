@@ -27,7 +27,10 @@ dependencies:
   path_provider: ^1.6.10
   hive:
   hive_flutter:
-  get_it:
+  image_picker:
+  googleapis:
+  google_sign_in:
+  http:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
