@@ -10,6 +10,7 @@ class NotesApi {
   }
 
   static Future<Note> getNoteByName(String fileName) async {
+    print(notesBox.path);
     return notesBox.values.firstWhere((note) => note.fileName == fileName);
   }
 

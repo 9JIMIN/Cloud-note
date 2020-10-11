@@ -16,7 +16,7 @@ class Services {
       SettingsApi.settingsModel.lastOpenNoteName;
 
   static String get lastOpenFilePath =>
-      SettingsApi.settingsModel.rootPath + '/json/$lastOpenFileName.json';
+      SettingsApi.settingsModel.rootPath + '/note-data/json/$lastOpenFileName.json';
 
   // 1-1. 처음 열때
   // ****************************************************
@@ -84,7 +84,7 @@ class Services {
     final Note note = await NotesApi.getNoteByName(fileName);
     await NotesApi.deleteNote(note);
     await ZefyrApi.deleteDocument(
-        SettingsApi.settingsModel.rootPath + '/json/$fileName.json');
+        SettingsApi.settingsModel.rootPath + '/note-data/json/$fileName.json');
   }
 
   // 6. 문서 생성
@@ -94,7 +94,7 @@ class Services {
 
     final newFileName = DateTime.now().toIso8601String();
     final newFilePath =
-        SettingsApi.settingsModel.rootPath + '/json/$newFileName.json';
+        SettingsApi.settingsModel.rootPath + '/note-data/json/$newFileName.json';
 
     await ZefyrApi.addDocument(document, newFilePath);
     await NotesApi.addNote(title, newFileName);

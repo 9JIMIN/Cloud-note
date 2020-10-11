@@ -2,11 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:writer/screens/google_auth_client.dart';
+import 'package:writer/cloud/google_auth_client.dart';
+import 'package:writer/cloud/google_drive.dart';
 import 'package:writer/screens/home_drawer.dart';
 import 'package:zefyr/zefyr.dart';
-import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:google_sign_in/google_sign_in.dart' as signIn;
 
 import '../models/note.dart';
 import '../models/settings.dart';
@@ -56,24 +55,7 @@ class HomePageState extends State<HomePage> {
           IconButton(
               icon: Icon(Icons.cloud),
               onPressed: () async {
-                final googleSignIn = signIn.GoogleSignIn.standard(
-                    scopes: [drive.DriveApi.DriveScope]);
-                final signIn.GoogleSignInAccount account =
-                    await googleSignIn.signIn();
-                print("User account $account");
-
-                final authHeaders = await account.authHeaders;
-                final authenticateClient = GoogleAuthClient(authHeaders);
-                final driveApi = drive.DriveApi(authenticateClient);
-
-                final Stream<List<int>> mediaStream =
-                    Future.value([104, 105]).asStream().asBroadcastStream();
-                var media = new drive.Media(mediaStream, 2);
-                var driveFile = new drive.File();
-                driveFile.name = "hello_world.txt";
-                final result =
-                    await driveApi.files.create(driveFile, uploadMedia: media);
-                print("Upload result: $result");
+                await GoogleDrive.uploadFile(Services.rootPath);
               }),
         ],
       ),
@@ -131,7 +113,9 @@ class MyAppZefyrImageDelegate implements ZefyrImageDelegate<ImageSource> {
     if (pickedFile == null) return null;
     print('picked file path: ' + pickedFile.path);
     final newPath =
-        rootPath + '/images/${DateTime.now().toIso8601String()}.jpg';
+        rootPath + '/note-data/image/${DateTime.now().toIso8601String()}.jpg';
+        // 여기서 note box에 이미지 이름 추가하고, 삭제시 같이 삭제해줌.
+        // ########################################################
     await File(newPath).create(recursive: true);
     await File(pickedFile.path).copy(newPath);
     print(newPath);

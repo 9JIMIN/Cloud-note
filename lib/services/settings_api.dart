@@ -16,6 +16,7 @@ class SettingsApi {
     final rootDirectory = await getApplicationDocumentsDirectory();
     final rootPath = rootDirectory.path;
     final fileName = DateTime.now().toIso8601String();
+    print(settingsBox.path);
     await settingsBox.add(Settings(
       isDarkMode: true,
       rootPath: rootPath,
