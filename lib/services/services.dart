@@ -6,9 +6,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:zefyr/zefyr.dart';
 
 import '../models/note.dart';
-import 'notes_api.dart';
-import 'settings_api.dart';
-import 'zefyr_api.dart';
+import '../apis/notes_api.dart';
+import '../apis/settings_api.dart';
+import '../apis/zefyr_api.dart';
 
 class Services {
   static String get rootPath => SettingsApi.settingsModel.rootPath;
@@ -37,6 +37,7 @@ class Services {
   static Future<void> _whenNoSettings() async {
     // 세팅 추가
     await SettingsApi.initSettings();
+    await NotesApi.initNote();
     final initTitle = 'welcome to my app';
     final initContent = 'welcome to my note app\n';
     final document = await ZefyrApi.stringToDocument(initContent);
@@ -48,7 +49,16 @@ class Services {
     await NotesApi.addNote(
       initTitle,
       lastOpenFileName,
+      0
     );
+  }
+
+  static Future<void> toggleIsFold(key) async{
+    await NotesApi.toggleIsFold(key);
+  }
+
+  static Future<void> addFolder(int parentKey) async{
+    await NotesApi.addFolder(parentKey);
   }
 
   // 2-1. 노트 읽기
@@ -88,7 +98,7 @@ class Services {
   }
 
   // 6. 문서 생성
-  static Future<void> addNote() async {
+  static Future<void> addNote(int parentKey) async {
     final document = await ZefyrApi.stringToDocument('아무내용도 없을때는 어떻게 해야함?\n');
     final title = '제목없음';
 
@@ -97,6 +107,6 @@ class Services {
         SettingsApi.settingsModel.rootPath + '/note-data/json/$newFileName.json';
 
     await ZefyrApi.addDocument(document, newFilePath);
-    await NotesApi.addNote(title, newFileName);
+    await NotesApi.addNote(title, newFileName, parentKey);
   }
 }
