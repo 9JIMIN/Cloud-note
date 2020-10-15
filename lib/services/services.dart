@@ -3,68 +3,60 @@ import 'dart:io';
 
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:zefyr/zefyr.dart';
 
 import '../models/note.dart';
-import '../apis/notes_api.dart';
-import '../apis/settings_api.dart';
-import '../apis/zefyr_api.dart';
+import '../apis/notesBox_api.dart';
+import '../apis/settingsBox_api.dart';
+import '../apis/document_api.dart';
+
+// 이 서비스 클래스는 싱글톤으로 항상 떠 있게 하자.
 
 class Services {
-  static String get rootPath => SettingsApi.settingsModel.rootPath;
+  // static String get rootPath => SettingsBoxApi.settingsModel.rootPath;
   static String get lastOpenFileName =>
-      SettingsApi.settingsModel.lastOpenNoteName;
+      SettingsBoxApi.settingsModel.lastOpenNoteName;
 
   static String get lastOpenFilePath =>
-      SettingsApi.settingsModel.rootPath + '/note-data/json/$lastOpenFileName.json';
+      SettingsBoxApi.settingsModel.rootPath +
+      '/note-data/json/$lastOpenFileName.json';
+
+  String rootPath;
+  String jsonPath;
+
+  String toJsonPath(String fileName) =>
+      rootPath + '/documents/json/$fileName.json';
 
   // 1-1. 처음 열때
   // ****************************************************
-  static Future<void> initApp() async {
-    // 박스 열기
+  Future<void> initApp() async {
     await Hive.initFlutter();
-    await SettingsApi.openSettingsBox();
-    await NotesApi.openNotesBox();
-    // 세팅박스 있는지 확인
-    if (SettingsApi.settingsBox.isEmpty) {
-      // 이상한게 그냥 함수만 넣으면 이걸 await하지 않음.
-      await _whenNoSettings();
-      await Future.delayed(Duration(seconds: 0));
+    await SettingsBoxApi.registerAndOpenBox();
+    await NotesBoxApi.registerAndOpenBox();
+    await getApplicationDocumentsDirectory()
+        .then((directory) => rootPath = directory.path);
+    // 세팅박스가 있는지 확인
+    if (SettingsBoxApi.settingsBox.isEmpty) {
+      final initalFileName = DateTime.now().toIso8601String();
+      await SettingsBoxApi.initBox(initalFileName);
+      await NotesBoxApi.initBox(initalFileName);
+      await DocumentApi.initDocument(toJsonPath(initalFileName));
     }
   }
 
-  // 1-2. 처음 깔았을때
-  static Future<void> _whenNoSettings() async {
-    // 세팅 추가
-    await SettingsApi.initSettings();
-    await NotesApi.initNote();
-    final initTitle = 'welcome to my app';
-    final initContent = 'welcome to my note app\n';
-    final document = await ZefyrApi.stringToDocument(initContent);
-    await ZefyrApi.addDocument(
-      document,
-      lastOpenFilePath,
-    );
-    // 노트 추가
-    await NotesApi.addNote(
-      initTitle,
-      lastOpenFileName,
-      0
-    );
+  static Future<void> toggleIsFold(key) async {
+    await NotesBoxApi.toggleIsFold(key);
   }
 
-  static Future<void> toggleIsFold(key) async{
-    await NotesApi.toggleIsFold(key);
-  }
-
-  static Future<void> addFolder(int parentKey) async{
-    await NotesApi.addFolder(parentKey);
+  static Future<void> addFolder(int parentKey) async {
+    await NotesBoxApi.addFolder(parentKey);
   }
 
   // 2-1. 노트 읽기
   // **************************************
   static Future<Note> getNote() async {
-    final Note note = await NotesApi.getNoteByName(lastOpenFileName);
+    final Note note = await NotesBoxApi.getNoteByName(lastOpenFileName);
     return note;
   }
 
@@ -76,37 +68,38 @@ class Services {
 
   // 3. 저장
   static Future<void> saveNote(Note note, NotusDocument document) async {
-    await NotesApi.updateNote(note.title, lastOpenFileName);
-    await ZefyrApi.updateDocument(document, lastOpenFilePath);
+    await NotesBoxApi.updateNote(note.title, lastOpenFileName);
+    await DocumentApi.updateDocument(document, lastOpenFilePath);
   }
 
   // 4. 세팅 문서 업데이트
   static Future<void> updateLastNote(String fileName) async {
-    await SettingsApi.updateLastOpenNoteName(fileName);
+    await SettingsBoxApi.updateLastOpenNoteName(fileName);
   }
 
   // 5. 문서 삭제
   static Future<void> deleteNote(String fileName) async {
-    if (SettingsApi.settingsModel.lastOpenNoteName == fileName) {
+    if (SettingsBoxApi.settingsModel.lastOpenNoteName == fileName) {
       // 현재 문서가 삭제되면, 텅비워줌.
-      await SettingsApi.updateLastOpenNoteName('empty');
+      await SettingsBoxApi.updateLastOpenNoteName('empty');
     }
-    final Note note = await NotesApi.getNoteByName(fileName);
-    await NotesApi.deleteNote(note);
-    await ZefyrApi.deleteDocument(
-        SettingsApi.settingsModel.rootPath + '/note-data/json/$fileName.json');
+    final Note note = await NotesBoxApi.getNoteByName(fileName);
+    await NotesBoxApi.deleteNote(note);
+    await DocumentApi.deleteDocument(SettingsBoxApi.settingsModel.rootPath +
+        '/note-data/json/$fileName.json');
   }
 
   // 6. 문서 생성
   static Future<void> addNote(int parentKey) async {
-    final document = await ZefyrApi.stringToDocument('아무내용도 없을때는 어떻게 해야함?\n');
+    final document =
+        await DocumentApi.stringToDocument('아무내용도 없을때는 어떻게 해야함?\n');
     final title = '제목없음';
 
     final newFileName = DateTime.now().toIso8601String();
-    final newFilePath =
-        SettingsApi.settingsModel.rootPath + '/note-data/json/$newFileName.json';
+    final newFilePath = SettingsBoxApi.settingsModel.rootPath +
+        '/note-data/json/$newFileName.json';
 
-    await ZefyrApi.addDocument(document, newFilePath);
-    await NotesApi.addNote(title, newFileName, parentKey);
+    await DocumentApi.addDocument(document, newFilePath);
+    await NotesBoxApi.addNote(title, newFileName, parentKey);
   }
 }

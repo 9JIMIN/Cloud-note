@@ -4,7 +4,13 @@ import 'dart:io';
 import 'package:zefyr/zefyr.dart';
 import 'package:quill_delta/quill_delta.dart';
 
-class ZefyrApi {
+class DocumentApi {
+  static Future<void> initDocument(String filePath) async {
+    final initContent = 'welcome to my note app!!!\n';
+    final document = await stringToDocument(initContent);
+    await addDocument(document, filePath);
+  }
+
   static Future<NotusDocument> stringToDocument(String string) async {
     final Delta delta = Delta()..insert("$string\n");
     return NotusDocument.fromDelta(delta);
@@ -29,7 +35,7 @@ class ZefyrApi {
     final contents = await File(filePath).readAsString();
     return NotusDocument.fromJson(jsonDecode(contents));
   }
-  
+
   static Future<void> deleteDocument(String filePath) async {
     await File(filePath).delete(recursive: true);
   }

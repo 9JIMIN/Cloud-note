@@ -1,17 +1,25 @@
 import 'package:hive/hive.dart';
 import 'package:writer/models/note.dart';
 
-class NotesApi {
+class NotesBoxApi {
   static Box<Note> get notesBox => Hive.box<Note>('notes');
 
-  static Future<void> openNotesBox() async {
+  static Future<void> registerAndOpenBox() async {
     Hive.registerAdapter<Note>(NoteAdapter());
     await Hive.openBox<Note>('notes');
   }
 
-  static Future<void> initNote() async {
-    await notesBox.add(Note());
-    await notesBox.delete(0);
+  static Future<void> initBox(String initalFileName) async {
+    final initalTitle = 'welcome to note app';
+    await notesBox.put(
+      1, // 0번은 비워야하기 때문에 1부터 넣음. 예상대로라면 이후 add는 2번부터 되겠지?
+      Note(
+        fileName: initalFileName,
+        title: initalTitle,
+        lastModified: DateTime.now(),
+        parentKey: 0,
+      ),
+    );
   }
 
   static Future<void> toggleIsFold(int key) async {
