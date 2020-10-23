@@ -45,7 +45,6 @@ class GoogleDrive {
       zipFile.openRead(),
       zipFile.lengthSync(),
     );
-
     final result = await driveApi.files.create(driveFile, uploadMedia: media);
     print("Upload result: $result");
   }
